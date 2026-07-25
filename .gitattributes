@@ -1,0 +1,12 @@
+# Normalize line endings: LF in the repository and on checkout, so a
+# Windows dev machine and the Linux CI runner agree and git stops warning
+# about CRLF conversion.
+* text=auto eol=lf
+
+# Binary assets — never normalize or diff as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.woff binary
+*.woff2 binary
