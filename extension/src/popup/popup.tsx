@@ -23,9 +23,19 @@ import type {
 import { Message } from "./ui.js";
 import type { Banner } from "./ui.js";
 import { BulkEditView } from "./BulkEditView.js";
+import type { BulkLoad } from "./BulkEditView.js";
 import { getPlan, openUpgrade } from "./paywall.js";
 import type { Plan } from "./paywall.js";
 import { canApplyFindReplace, canUseBulkEdit } from "./gating.js";
+import { RecipesPanel, SaveRecipeControl } from "./recipe-ui.js";
+import { deleteRecipe, listRecipes } from "../shared/recipes.js";
+import type { Recipe } from "../shared/recipes.js";
+
+/** A queued request to replay a saved config into a view (nonce forces re-apply). */
+export interface FindReplaceLoad {
+  options: FindOptions;
+  nonce: number;
+}
 
 // ── shared helpers ────────────────────────────────────────────────────────────
 
@@ -283,7 +293,38 @@ function Workbench({
   onUpgrade: () => void;
 }) {
   const [tab, setTab] = useState<Tab>("find");
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  // Queued config replays; the nonce makes reloading the same recipe re-apply.
+  const [findLoad, setFindLoad] = useState<FindReplaceLoad | null>(null);
+  const [bulkLoad, setBulkLoad] = useState<BulkLoad | null>(null);
   const bulkAllowed = canUseBulkEdit(isPro);
+
+  async function refreshRecipes() {
+    setRecipes(await listRecipes());
+  }
+  useEffect(() => {
+    void refreshRecipes();
+  }, []);
+
+  function handleLoad(recipe: Recipe) {
+    if (recipe.kind === "findReplace") {
+      setFindLoad({ options: recipe.options, nonce: Date.now() });
+      setTab("find");
+    } else {
+      setBulkLoad({
+        databaseId: recipe.databaseId,
+        config: recipe.config,
+        nonce: Date.now(),
+      });
+      setTab("bulk");
+    }
+  }
+
+  async function handleDelete(id: string) {
+    await deleteRecipe(id);
+    await refreshRecipes();
+  }
+
   return (
     <section class="stack">
       <div class="tabs" role="tablist">
@@ -308,9 +349,21 @@ function Workbench({
       </div>
 
       {tab === "find" ? (
-        <FindReplaceView isPro={isPro} onUpgrade={onUpgrade} />
+        <FindReplaceView
+          isPro={isPro}
+          onUpgrade={onUpgrade}
+          recipeCount={recipes.length}
+          onRecipeSaved={() => void refreshRecipes()}
+          load={findLoad}
+        />
       ) : bulkAllowed ? (
-        <BulkEditView />
+        <BulkEditView
+          isPro={isPro}
+          onUpgrade={onUpgrade}
+          recipeCount={recipes.length}
+          onRecipeSaved={() => void refreshRecipes()}
+          load={bulkLoad}
+        />
       ) : (
         <PaywallCard
           onUpgrade={onUpgrade}
@@ -318,6 +371,12 @@ function Workbench({
           body="Edit a whole database's properties at once — set, clear, find & replace, and manage multi-select options across every page in one run."
         />
       )}
+
+      <RecipesPanel
+        recipes={recipes}
+        onLoad={handleLoad}
+        onDelete={(id) => void handleDelete(id)}
+      />
     </section>
   );
 }
@@ -357,9 +416,15 @@ interface ApplyResult {
 function FindReplaceView({
   isPro,
   onUpgrade,
+  recipeCount,
+  onRecipeSaved,
+  load,
 }: {
   isPro: boolean;
   onUpgrade: () => void;
+  recipeCount: number;
+  onRecipeSaved: () => void;
+  load: FindReplaceLoad | null;
 }) {
   const [search, setSearch] = useState("");
   const [replace, setReplace] = useState("");
@@ -396,6 +461,40 @@ function FindReplaceView({
     () => checked.reduce((n, c) => (c ? n + 1 : n), 0),
     [checked],
   );
+
+  // Replay a saved recipe into the form. Keyed on the load nonce so loading the
+  // same recipe twice re-applies it.
+  useEffect(() => {
+    if (!load) return;
+    const o = load.options;
+    setSearch(o.searchText);
+    setReplace(o.replaceText ?? "");
+    setMatchCase(o.matchCase ?? false);
+    setWholeWord(o.wholeWord ?? false);
+    if (o.scope.kind === "database") {
+      setScope("database");
+      setDatabaseId(o.scope.databaseId);
+    } else {
+      setScope("all");
+    }
+    setPreview(null);
+    setChecked([]);
+    setApplied(null);
+    setUndone(null);
+    setBanner({ kind: "info", text: "Recipe loaded — review, then Preview." });
+  }, [load?.nonce]); // eslint-disable-line -- keyed on the load nonce only
+
+  /** Assemble the current form as FindOptions, or null when search is empty. */
+  function buildOptions(): FindOptions | null {
+    if (!search.trim()) return null;
+    return {
+      searchText: search,
+      replaceText: replace,
+      scope: scope === "all" ? { kind: "all" } : { kind: "database", databaseId },
+      matchCase,
+      wholeWord,
+    };
+  }
 
   function resetOutcome() {
     setApplied(null);
@@ -604,6 +703,17 @@ function FindReplaceView({
           {applying ? "Applying…" : `Apply${preview ? ` (${checkedCount})` : ""}`}
         </button>
       </div>
+
+      <SaveRecipeControl
+        isPro={isPro}
+        recipeCount={recipeCount}
+        onUpgrade={onUpgrade}
+        onSaved={onRecipeSaved}
+        buildPayload={() => {
+          const options = buildOptions();
+          return options ? { kind: "findReplace", options } : null;
+        }}
+      />
 
       {preview && !canApplyFindReplace(checkedCount, isPro).allowed && (
         <div class="upsell">

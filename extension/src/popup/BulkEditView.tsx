@@ -21,6 +21,14 @@ import type {
 import type { UndoEntry } from "../features/find-replace/engine.js";
 import { Message } from "./ui.js";
 import type { Banner } from "./ui.js";
+import { SaveRecipeControl } from "./recipe-ui.js";
+
+/** A queued request to replay a saved bulk config into this view. */
+export interface BulkLoad {
+  databaseId: string;
+  config: BulkConfig;
+  nonce: number;
+}
 
 // ── property type → allowed operations ────────────────────────────────────────
 
@@ -148,6 +156,50 @@ function buildOperation(op: OpKind, type: string, v: ValueState): BulkOperation 
   }
 }
 
+/** Inverse of buildOperation: rebuild the flat ValueState from a saved op. */
+function operationToValueState(op: BulkOperation): ValueState {
+  const v: ValueState = { ...EMPTY_VALUE };
+  switch (op.type) {
+    case "clear":
+      break;
+    case "findReplace":
+      v.search = op.search;
+      v.replace = op.replace;
+      v.matchCase = op.matchCase ?? false;
+      v.wholeWord = op.wholeWord ?? false;
+      break;
+    case "addOption":
+    case "removeOption":
+      v.option = op.option;
+      break;
+    case "set": {
+      const sv = op.value;
+      switch (sv.kind) {
+        case "text":
+          v.text = sv.text;
+          break;
+        case "select":
+          v.text = sv.name ?? "";
+          break;
+        case "multi_select":
+          v.text = sv.names.join(", ");
+          break;
+        case "number":
+          v.number = sv.number == null ? "" : String(sv.number);
+          break;
+        case "checkbox":
+          v.checkbox = sv.checkbox;
+          break;
+        case "date":
+          v.date = sv.date?.start ?? "";
+          break;
+      }
+      break;
+    }
+  }
+  return v;
+}
+
 // ── component ─────────────────────────────────────────────────────────────────
 
 interface ApplyResult {
@@ -156,7 +208,19 @@ interface ApplyResult {
   undo: UndoEntry[];
 }
 
-export function BulkEditView() {
+export function BulkEditView({
+  isPro,
+  onUpgrade,
+  recipeCount,
+  onRecipeSaved,
+  load,
+}: {
+  isPro: boolean;
+  onUpgrade: () => void;
+  recipeCount: number;
+  onRecipeSaved: () => void;
+  load: BulkLoad | null;
+}) {
   // Database picker.
   const [databases, setDatabases] = useState<DatabaseSummary[] | null>(null);
   const [dbLoading, setDbLoading] = useState(false);
@@ -181,6 +245,13 @@ export function BulkEditView() {
   );
   const [undoing, setUndoing] = useState(false);
   const [banner, setBanner] = useState<Banner>(null);
+
+  // A saved bulk config awaiting replay. Applied in stages once the target
+  // database's schema has loaded (see the load-sequencing effects below).
+  const [pending, setPending] = useState<{
+    databaseId: string;
+    config: BulkConfig;
+  } | null>(null);
 
   function patchValue(patch: Partial<ValueState>) {
     setValue((v) => ({ ...v, ...patch }));
@@ -240,6 +311,47 @@ export function BulkEditView() {
     resetOutcome();
     setBanner(null);
   }, [propertyName]); // eslint-disable-line -- keyed on property choice only
+
+  // ── recipe load (staged) ────────────────────────────────────────────────────
+  // Replaying a saved bulk config can't be done in one shot: selecting the
+  // database kicks off an async schema fetch, and choosing the property resets
+  // the operation/value. So we stash the config as `pending` and drive the
+  // database → property → op/value sequence across renders. This effect is
+  // declared AFTER the property-reset effect so, on the render where the target
+  // property lands, it runs last and its op/value win over that reset.
+  useEffect(() => {
+    if (!load) return;
+    setPending({ databaseId: load.databaseId, config: load.config });
+    setDatabaseId(load.databaseId);
+  }, [load?.nonce]); // eslint-disable-line -- keyed on the load nonce only
+
+  useEffect(() => {
+    if (!pending) return;
+    if (pending.databaseId !== databaseId) return; // wait for the db switch
+    if (!schema) return; // wait for the schema fetch
+    const propName = pending.config.propertyName;
+    if (!schema.some((p) => p.name === propName)) {
+      // The saved property no longer exists in this database.
+      setPending(null);
+      setBanner({
+        kind: "err",
+        text: `Recipe property “${propName}” is not in this database anymore.`,
+      });
+      return;
+    }
+    if (propertyName !== propName) {
+      setPropertyName(propName); // step 1 — the property-reset effect then fires
+      return;
+    }
+    // step 2 — property is set and reset has run: apply the saved op + value.
+    setOp(pending.config.operation.type);
+    setValue(operationToValueState(pending.config.operation));
+    setPreview(null);
+    setApplied(null);
+    setUndone(null);
+    setPending(null);
+    setBanner({ kind: "info", text: "Recipe loaded — review, then Preview." });
+  }, [pending, schema, databaseId, propertyName]);
 
   const operation = useMemo(
     () => (propertyName ? buildOperation(op, propType, value) : null),
@@ -447,6 +559,21 @@ export function BulkEditView() {
               : `Apply${preview && preview.changes.length > 0 ? ` (${preview.changes.length})` : ""}`}
           </button>
         </div>
+      )}
+
+      {propertyName && ops.length > 0 && (
+        <SaveRecipeControl
+          isPro={isPro}
+          recipeCount={recipeCount}
+          onUpgrade={onUpgrade}
+          onSaved={onRecipeSaved}
+          buildPayload={() => {
+            if (!databaseId || !propertyName || !operation) return null;
+            const config: BulkConfig = { propertyName, operation };
+            const databaseTitle = databases?.find((d) => d.id === databaseId)?.title;
+            return { kind: "bulk", databaseId, databaseTitle, config };
+          }}
+        />
       )}
 
       <Message banner={banner} />
