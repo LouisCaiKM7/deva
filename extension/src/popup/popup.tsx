@@ -191,14 +191,45 @@ function ConnectedBar({
 
 // ── Onboarding gate ───────────────────────────────────────────────────────────
 
+/**
+ * Result of the post-connect "can I see any databases?" visibility probe.
+ * `notion:listDatabases` reads the *saved* token (its message carries none), so
+ * this can only run once a token is persisted — see `test()` below.
+ */
+type DbCheck =
+  | { status: "idle" }
+  | { status: "checking" }
+  | { status: "ok"; count: number }
+  | { status: "error"; error: string };
+
 function Onboarding({ onConnected }: { onConnected: () => void }) {
   const [token, setTokenValue] = useState("");
   const [testing, setTesting] = useState(false);
   const [tested, setTested] = useState(false);
+  const [dbCheck, setDbCheck] = useState<DbCheck>({ status: "idle" });
   const [banner, setBanner] = useState<Banner>({
     kind: "info",
     text: "Paste your Notion internal integration token to begin.",
   });
+
+  /**
+   * Ask the worker how many databases the integration can actually see. This is
+   * the "did it really work?" confirmation: N≥1 proves the share worked, 0 means
+   * the user probably skipped the share step. Requires a saved token.
+   */
+  async function runDbCheck() {
+    setDbCheck({ status: "checking" });
+    try {
+      const res = await sendMessage({ type: "notion:listDatabases" });
+      if (res.ok) setDbCheck({ status: "ok", count: res.databases.length });
+      else setDbCheck({ status: "error", error: res.error });
+    } catch (err) {
+      setDbCheck({
+        status: "error",
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
 
   async function test() {
     const value = token.trim();
@@ -207,12 +238,17 @@ function Onboarding({ onConnected }: { onConnected: () => void }) {
       return;
     }
     setTesting(true);
+    setDbCheck({ status: "idle" });
     setBanner({ kind: "info", text: "Testing connection…" });
     try {
       const res = await sendMessage({ type: "notion:testConnection", token: value });
       if (res.ok) {
         setTested(true);
         setBanner({ kind: "ok", text: `Success — connected as ${describeUser(res.user)}.` });
+        // Persist now so the visibility probe (which reads the saved token) can
+        // run, then immediately confirm what the integration can actually see.
+        await setToken(value);
+        void runDbCheck();
       } else {
         setTested(false);
         setBanner({ kind: "err", text: res.error });
@@ -257,11 +293,15 @@ function Onboarding({ onConnected }: { onConnected: () => void }) {
           Copy the <strong>Internal Integration Token</strong> and paste it below.
         </li>
         <li class="steps__important">
-          <strong>Share your pages with it.</strong> In Notion, open a
-          page or database → <strong>•••</strong> → <strong>Connections</strong> →
-          add your integration. Repeat for anything you want to edit.
+          <strong>Share one page — access cascades.</strong> Give the integration{" "}
+          <strong>a single top-level page</strong> (or a whole teamspace) and
+          everything nested inside comes with it automatically.
+          <span class="steps__how">
+            In Notion: <strong>•••</strong> → <strong>Connections</strong> → add
+            your integration.
+          </span>
           <span class="steps__warn">
-            Skip this and every search comes back empty.
+            One quick, one-time share — not page by page.
           </span>
         </li>
       </ol>
@@ -279,6 +319,7 @@ function Onboarding({ onConnected }: { onConnected: () => void }) {
           onInput={(e) => {
             setTokenValue((e.target as HTMLInputElement).value);
             setTested(false);
+            setDbCheck({ status: "idle" });
           }}
         />
       </label>
@@ -304,7 +345,58 @@ function Onboarding({ onConnected }: { onConnected: () => void }) {
       </div>
 
       <Message banner={banner} />
+      <DbCheckPanel state={dbCheck} onRecheck={() => void runDbCheck()} />
     </section>
+  );
+}
+
+/**
+ * Renders the post-connect database-visibility confirmation:
+ *  - N≥1  → a green "it worked, I can see N database(s)" line.
+ *  - 0    → a prominent nudge to share a page, with a "Check again" button that
+ *           re-runs the probe (so the user can share, then re-check in place).
+ */
+function DbCheckPanel({
+  state,
+  onRecheck,
+}: {
+  state: DbCheck;
+  onRecheck: () => void;
+}) {
+  if (state.status === "idle") return null;
+  if (state.status === "checking") {
+    return <div class="msg msg--info">Checking your workspace…</div>;
+  }
+  if (state.status === "error") {
+    return (
+      <Message
+        banner={{ kind: "err", text: `Couldn't check your workspace: ${state.error}` }}
+      />
+    );
+  }
+  if (state.count > 0) {
+    return (
+      <Message
+        banner={{
+          kind: "ok",
+          text: `✓ Connected — I can see ${state.count} database${
+            state.count === 1 ? "" : "s"
+          } in your workspace.`,
+        }}
+      />
+    );
+  }
+  return (
+    <div class="dbnudge" role="status" aria-live="polite">
+      <p class="dbnudge__text">
+        Connected, but I can&rsquo;t see any databases yet — did you share a page
+        or teamspace with the integration? (<strong>•••</strong> →{" "}
+        <strong>Connections</strong>)
+      </p>
+      <button class="btn btn--secondary" type="button" onClick={onRecheck}>
+        Check again
+      </button>
+    </div>
   );
 }
 

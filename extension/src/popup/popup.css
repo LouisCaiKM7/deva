@@ -290,11 +290,41 @@ body {
   font-weight: 700;
 }
 
+.steps__how {
+  display: block;
+  margin-top: 4px;
+  color: var(--fg);
+}
+
 .steps__warn {
   display: block;
   margin-top: 4px;
   color: #b45309;
   font-weight: 600;
+}
+
+/* Post-connect nudge — shown when the integration can see 0 databases. */
+.dbnudge {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fff8ec;
+  border: 1px solid #f5c77e;
+  border-radius: 6px;
+}
+
+.dbnudge__text {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--fg);
+}
+
+.dbnudge .btn {
+  flex: none;
+  align-self: flex-start;
+  min-width: 120px;
 }
 
 /* Find & Replace empty state — reminds users to share pages */
