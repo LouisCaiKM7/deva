@@ -49,6 +49,11 @@ Breaking changes: `!` after type and a `BREAKING CHANGE:` footer.
   3. **Effort-tiering:** mechanical tasks (scaffolding, boilerplate, doc formatting) run at low effort; design, debugging, and review run at high effort.
   4. **No duplicate work:** the coordinator never redoes what it delegated; agents get non-overlapping file ownership to avoid merge conflicts.
   5. **Kill criteria:** any workstream that hasn't produced a usable increment in 2 cycles is stopped and re-scoped.
+  6. **Coordinator owns fan-out.** The coordinator launches crew agents *directly* and never delegates work to an
+     agent that will spawn its own sub-agents — a delegated coordinator can silently breach the concurrency cap.
+     Every launched agent's brief forbids it from spawning further agents unless the coordinator has explicitly
+     budgeted for it. When more than 7 units of work exist, the coordinator **queues and batches** (run 7, wait for a
+     slot, launch the next) rather than exceeding the cap.
 - Standard build-phase crew shape (≤7): 2–3 feature builders (disjoint modules), 1 test writer, 1 reviewer, 1 docs/devops, coordinator integrates.
 
 ## 6. Decision records
