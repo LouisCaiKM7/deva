@@ -5,6 +5,8 @@
     "moduleResolution": "Bundler",
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "types": ["chrome"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,

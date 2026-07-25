@@ -12,6 +12,9 @@
     "test:watch": "vitest",
     "clean": "node -e \"import('node:fs').then(fs=>fs.rmSync('dist',{recursive:true,force:true}))\""
   },
+  "dependencies": {
+    "preact": "^10.25.4"
+  },
   "devDependencies": {
     "@types/chrome": "^0.0.268",
     "esbuild": "^0.21.5",
