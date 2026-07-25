@@ -111,6 +111,53 @@ export type ExtensionMessage =
   | BulkApplyMessage
   | BulkUndoMessage;
 
+/**
+ * Every `type` string this worker owns. `satisfies` guarantees no stray values;
+ * the `_EnsureComplete` assertion below fails to compile if a message type is
+ * ever added to the union without being listed here.
+ */
+export const EXTENSION_MESSAGE_TYPES = [
+  "notion:testConnection",
+  "notion:listDatabases",
+  "findReplace:preview",
+  "findReplace:apply",
+  "findReplace:undo",
+  "bulkProps:getSchema",
+  "bulkProps:preview",
+  "bulkProps:apply",
+  "bulkProps:undo",
+] as const satisfies readonly ExtensionMessage["type"][];
+
+// Compile-time completeness: the `satisfies` above rejects stray values, and this
+// exported type-only assertion errors if a message type is ever added to the
+// union without being listed above. (Exporting keeps it from tripping
+// `noUnusedLocals`; it carries no runtime cost.)
+type AssertExtends<A extends B, B> = A;
+export type AllMessageTypesListed = AssertExtends<
+  ExtensionMessage["type"],
+  (typeof EXTENSION_MESSAGE_TYPES)[number]
+>;
+
+/**
+ * Runtime guard: is this a message this service worker owns? The SW registers
+ * one `onMessage` listener, but so does ExtensionPay (via `startBackground()`).
+ * Chrome delivers every message to BOTH listeners, and the first to call
+ * `sendResponse` wins — so if we responded to ExtPay's internal messages we
+ * would race and corrupt its `getUser()`/payment flow. The listener uses this
+ * guard to handle ONLY our messages and let everything else fall through.
+ */
+export function isExtensionMessage(message: unknown): message is ExtensionMessage {
+  return (
+    typeof message === "object" &&
+    message !== null &&
+    "type" in message &&
+    typeof (message as { type: unknown }).type === "string" &&
+    (EXTENSION_MESSAGE_TYPES as readonly string[]).includes(
+      (message as { type: string }).type,
+    )
+  );
+}
+
 // ── Responses ───────────────────────────────────────────────────────────────
 
 export type TestConnectionResponse =
