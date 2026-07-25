@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bulk Buddy for Notion — Find & Replace and Bulk-Edit</title>
+  <meta name="description" content="Cross-page find and replace and bulk property editing for your own Notion workspace, via the official API, right in your browser. No server, no OAuth." />
+  <style>
+    :root {
+      --bg: #ffffff;
+      --bg-alt: #f6f7f9;
+      --card: #ffffff;
+      --border: #e4e6eb;
+      --text: #1c1e21;
+      --muted: #5c6470;
+      --accent: #2b6cb0;
+      --accent-ink: #ffffff;
+      --shadow: 0 1px 3px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.05);
+      --radius: 14px;
+      --maxw: 1040px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f1114;
+        --bg-alt: #16191d;
+        --card: #181b1f;
+        --border: #2a2f36;
+        --text: #e8eaed;
+        --muted: #9aa3ad;
+        --accent: #6ba7e6;
+        --accent-ink: #0f1114;
+        --shadow: 0 1px 3px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+      }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+    h1, h2, h3 { line-height: 1.2; letter-spacing: -0.02em; }
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: .78rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin: 0 0 12px;
+    }
+    .muted { color: var(--muted); }
+
+    /* Header */
+    header.nav {
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0;
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      backdrop-filter: saturate(1.4) blur(8px);
+      z-index: 10;
+    }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 62px; }
+    .brand { font-weight: 700; font-size: 1.05rem; letter-spacing: -.02em; }
+    .brand .dot { color: var(--accent); }
+    .nav-links { display: flex; gap: 22px; align-items: center; }
+    .nav-links a { color: var(--muted); font-size: .95rem; }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+    @media (max-width: 620px) { .nav-links a.hide-sm { display: none; } }
+
+    .btn {
+      display: inline-block;
+      background: var(--accent);
+      color: var(--accent-ink);
+      font-weight: 600;
+      padding: 11px 20px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      font-size: .95rem;
+      cursor: pointer;
+    }
+    .btn:hover { text-decoration: none; opacity: .92; }
+    .btn.secondary {
+      background: transparent;
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    /* Hero */
+    .hero { padding: 84px 0 56px; }
+    .hero h1 { font-size: clamp(2.1rem, 5vw, 3.3rem); margin: 0 0 18px; }
+    .hero p.sub { font-size: clamp(1.05rem, 2.3vw, 1.28rem); color: var(--muted); max-width: 620px; margin: 0 0 30px; }
+    .hero-cta { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+    .hero-note { font-size: .86rem; color: var(--muted); margin-top: 16px; }
+    .hero-note strong { color: var(--text); font-weight: 600; }
+
+    /* Demo placeholder */
+    .demo {
+      margin-top: 48px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-alt);
+      aspect-ratio: 16 / 9;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center;
+      color: var(--muted);
+      box-shadow: var(--shadow);
+    }
+    .demo span { font-size: .95rem; padding: 0 20px; }
+
+    section { padding: 62px 0; }
+    section.alt { background: var(--bg-alt); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .section-head { max-width: 640px; margin-bottom: 40px; }
+    .section-head h2 { font-size: clamp(1.6rem, 3.4vw, 2.1rem); margin: 0 0 12px; }
+    .section-head p { color: var(--muted); margin: 0; font-size: 1.05rem; }
+
+    .grid { display: grid; gap: 20px; }
+    .cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .cols-2 { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 820px) { .cols-3, .cols-2 { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .card h3 { margin: 0 0 8px; font-size: 1.12rem; }
+    .card p { margin: 0; color: var(--muted); font-size: .98rem; }
+    .card .ic { font-size: 1.4rem; margin-bottom: 12px; display: block; }
+
+    /* Feature (free vs pro) */
+    .tier-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+    .badge { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 4px 9px; border-radius: 999px; }
+    .badge.free { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+    .badge.pro { background: var(--accent); color: var(--accent-ink); }
+    ul.feat { list-style: none; padding: 0; margin: 16px 0 0; }
+    ul.feat li { padding: 8px 0 8px 26px; position: relative; color: var(--text); font-size: .97rem; border-top: 1px solid var(--border); }
+    ul.feat li:first-child { border-top: none; }
+    ul.feat li::before { content: "✓"; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+
+    /* Privacy */
+    .privacy-grid { display: grid; gap: 16px; grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 820px) { .privacy-grid { grid-template-columns: 1fr; } }
+    .pill { display: flex; gap: 12px; align-items: flex-start; }
+    .pill .k { font-weight: 600; }
+    .pill p { margin: 2px 0 0; color: var(--muted); font-size: .95rem; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9em; }
+
+    /* Pricing */
+    .price-grid { display: grid; gap: 20px; grid-template-columns: repeat(3, 1fr); align-items: stretch; }
+    @media (max-width: 820px) { .price-grid { grid-template-columns: 1fr; } }
+    .price {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      display: flex; flex-direction: column;
+    }
+    .price.highlight { border-color: var(--accent); box-shadow: var(--shadow); }
+    .price .name { font-weight: 700; font-size: 1.15rem; }
+    .price .amt { font-size: 2rem; font-weight: 700; margin: 12px 0 2px; letter-spacing: -.02em; }
+    .price .amt small { font-size: .95rem; font-weight: 500; color: var(--muted); }
+    .price .alt-amt { color: var(--muted); font-size: .9rem; margin-bottom: 16px; }
+    .price ul { list-style: none; padding: 0; margin: 0 0 24px; flex: 1; }
+    .price ul li { padding: 6px 0 6px 24px; position: relative; font-size: .95rem; color: var(--muted); }
+    .price ul li::before { content: "•"; position: absolute; left: 6px; color: var(--accent); }
+    .price .btn { text-align: center; }
+
+    /* Footer */
+    footer { border-top: 1px solid var(--border); padding: 40px 0; color: var(--muted); font-size: .9rem; }
+    .foot-inner { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; }
+    .foot-links { display: flex; gap: 20px; flex-wrap: wrap; }
+    .disclaimer { margin-top: 18px; font-size: .82rem; max-width: 720px; }
+  </style>
+</head>
+<body>
+
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <div class="brand">Bulk Buddy<span class="dot">.</span> <span class="muted" style="font-weight:500;">for Notion</span></div>
+      <nav class="nav-links">
+        <a href="#features" class="hide-sm">Features</a>
+        <a href="#privacy" class="hide-sm">Privacy</a>
+        <a href="#pricing" class="hide-sm">Pricing</a>
+        <a class="btn" href="[STORE URL]">Add to Chrome</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow">Find &amp; replace · Bulk property editing</p>
+      <h1>Bulk-edit your Notion workspace the way native tools won't.</h1>
+      <p class="sub">
+        Cross-page find and replace, plus bulk property operations across pages and databases — running
+        against your own workspace through Notion's official API, entirely in your browser.
+      </p>
+      <div class="hero-cta">
+        <a class="btn" href="[STORE URL]">Add to Chrome</a>
+        <a class="btn secondary" href="#features">See what it does</a>
+      </div>
+      <p class="hero-note">
+        <strong>No account. No server. No OAuth.</strong> Paste one Notion integration token and go —
+        your data never leaves your browser except to talk to Notion.
+      </p>
+
+      <!-- Demo placeholder -->
+      <div class="demo" role="img" aria-label="Product demo placeholder">
+        <span>[ Demo GIF / screenshot goes here — find-and-replace preview across a Notion workspace ]</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEM -->
+  <section class="alt" id="problem">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">The problem</p>
+        <h2>Notion still makes bulk changes painful.</h2>
+        <p>The moment you need to change the same thing in many places, you're editing pages one at a time.</p>
+      </div>
+      <div class="grid cols-3">
+        <div class="card">
+          <span class="ic" aria-hidden="true">🔍</span>
+          <h3>No cross-page find &amp; replace</h3>
+          <p>Rename a project or fix a recurring typo, and Notion has no way to search-and-replace across many pages and databases at once.</p>
+        </div>
+        <div class="card">
+          <span class="ic" aria-hidden="true">🧱</span>
+          <h3>Native bulk edit stops short</h3>
+          <p>Setting select, multi-select, date, number, or relation properties across hundreds of rows is exactly where Notion's built-in bulk edit gives up.</p>
+        </div>
+        <div class="card">
+          <span class="ic" aria-hidden="true">⏱️</span>
+          <h3>Manual work that adds up</h3>
+          <p>Re-tagging a database or applying the same change to a template means slow, error-prone, one-by-one edits.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES: FREE vs PRO -->
+  <section id="features">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">What you get</p>
+        <h2>Free to start. Pro when you scale.</h2>
+        <p>The free tier is a genuinely useful find-and-replace tool. Pro unlocks scale and the property operations native Notion refuses.</p>
+      </div>
+      <div class="grid cols-2">
+        <div class="card">
+          <div class="tier-head">
+            <h3>Free</h3>
+            <span class="badge free">Free forever</span>
+          </div>
+          <p class="muted">The find-and-replace tool Notion never shipped.</p>
+          <ul class="feat">
+            <li>Cross-page &amp; cross-database find and replace (titles + text properties)</li>
+            <li>Preview every match before you apply it</li>
+            <li>Small bulk batches (about 25 items per run)</li>
+            <li>1 saved recipe</li>
+            <li>Works on Chrome &amp; Edge (Manifest V3)</li>
+          </ul>
+        </div>
+        <div class="card" style="border-color: var(--accent);">
+          <div class="tier-head">
+            <h3>Pro</h3>
+            <span class="badge pro">$6/mo · $79 lifetime</span>
+          </div>
+          <p class="muted">Bulk operations at scale, plus the properties native tools won't touch.</p>
+          <ul class="feat">
+            <li>Unlimited batch size</li>
+            <li>Bulk property ops: select, multi-select, date, number &amp; relation</li>
+            <li>Unlimited saved recipes</li>
+            <li>Bulk duplicate &amp; apply-template</li>
+            <li>Undo history for your runs</li>
+          </ul>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:18px; font-size:.9rem;">
+        Formulas and rollups are computed by Notion and aren't directly editable via the API — Bulk Buddy
+        doesn't claim to change them.
+      </p>
+    </div>
+  </section>
+
+  <!-- PRIVACY / TRUST -->
+  <section class="alt" id="privacy">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Privacy by architecture</p>
+        <h2>Your workspace never touches our servers — because we don't have any.</h2>
+        <p>Bulk Buddy is a client-side extension. It talks straight to Notion and nowhere else.</p>
+      </div>
+      <div class="privacy-grid">
+        <div class="card pill">
+          <div>
+            <div class="k">One destination only</div>
+            <p>The extension makes network calls to a single host, <span class="mono">https://api.notion.com</span>, and only for actions you start.</p>
+          </div>
+        </div>
+        <div class="card pill">
+          <div>
+            <div class="k">Your token stays local</div>
+            <p>Your Notion integration token is stored on your device in the browser's extension storage (<span class="mono">chrome.storage.local</span>). We never receive it.</p>
+          </div>
+        </div>
+        <div class="card pill">
+          <div>
+            <div class="k">No tracking, no selling</div>
+            <p>No analytics that exfiltrate your content, no ad identifiers, no data sold or shared. There's nothing to sell — the data never reaches us.</p>
+          </div>
+        </div>
+        <div class="card pill">
+          <div>
+            <div class="k">You stay in control</div>
+            <p>You decide which pages the integration can see inside Notion. Disconnect or uninstall clears your token from the browser instantly.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Pricing</p>
+        <h2>Simple, honest pricing.</h2>
+        <p>Start free. Upgrade only when you need scale or team workflows.</p>
+      </div>
+      <div class="price-grid">
+        <div class="price">
+          <div class="name">Free</div>
+          <div class="amt">$0</div>
+          <div class="alt-amt">No card required</div>
+          <ul>
+            <li>Cross-page find &amp; replace</li>
+            <li>~25 items per batch</li>
+            <li>1 saved recipe</li>
+          </ul>
+          <a class="btn secondary" href="[STORE URL]">Add to Chrome</a>
+        </div>
+        <div class="price highlight">
+          <div class="name">Pro</div>
+          <div class="amt">$6 <small>/ mo</small></div>
+          <div class="alt-amt">$48/yr · or $79 one-time (lifetime)</div>
+          <ul>
+            <li>Unlimited batch size</li>
+            <li>Bulk property operations</li>
+            <li>Unlimited recipes</li>
+            <li>Bulk duplicate &amp; apply-template</li>
+            <li>Undo history</li>
+          </ul>
+          <a class="btn" href="[STORE URL]">Get Pro</a>
+        </div>
+        <div class="price">
+          <div class="name">Teams / Agency</div>
+          <div class="amt">$18 <small>/ mo</small></div>
+          <div class="alt-amt">$149/yr</div>
+          <ul>
+            <li>Everything in Pro</li>
+            <li>Multi-workspace recipe management</li>
+            <li>Built for consultants &amp; template-sellers</li>
+          </ul>
+          <a class="btn secondary" href="[STORE URL]">Get Teams</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="wrap">
+      <div class="foot-inner">
+        <div class="brand">Bulk Buddy<span class="dot">.</span> <span class="muted" style="font-weight:500;">for Notion</span></div>
+        <div class="foot-links">
+          <a href="#features">Features</a>
+          <a href="#pricing">Pricing</a>
+          <a href="../docs/privacy-policy.md">Privacy Policy</a>
+          <a href="mailto:[CONTACT EMAIL — founder to fill]">Contact</a>
+        </div>
+      </div>
+      <p class="disclaimer muted">
+        Bulk Buddy is an independent tool and is not affiliated with, endorsed by, or sponsored by Notion Labs, Inc.
+        "Notion" is a trademark of Notion Labs, Inc. Bulk Buddy operates on your own workspace using Notion's
+        official API with a token you provide.
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>
