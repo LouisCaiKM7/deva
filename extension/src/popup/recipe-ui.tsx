@@ -117,7 +117,11 @@ export function RecipesPanel({
               <button class="linkbtn" type="button" onClick={() => onLoad(r)}>
                 Load
               </button>
-              <button class="linkbtn" type="button" onClick={() => onDelete(r.id)}>
+              <button
+                class="linkbtn linkbtn--danger"
+                type="button"
+                onClick={() => onDelete(r.id)}
+              >
                 Delete
               </button>
             </span>
