@@ -34,7 +34,7 @@ Detailed 6-month ramp and assumptions: [research/2026-07-extension-validation.md
 |---|---|---|---|
 | **0 — Research & selection** | Jul 25 | ✅ Done | coordinator |
 | **1a — Product definition** | Jul 25 | ✅ Done — `replai` killed, pivot to Notion extension (ADR-0002/0003) | research + red-team |
-| **1b — MVP build** | Jul 26 – Aug 17 | **Day-1 CORS spike** → OSS-quality v1: token onboarding, find-and-replace, bulk property editor, saved recipes, ExtensionPay wired; tests + CI green | ≤2 builders, 1 test, 1 reviewer, 1 docs |
+| **1b — MVP build** | Jul 25 | ✅ **Done** (13 PRs, 104 tests, CI green) — spike passed, both features, paywall, recipes, icons, store assets. See [ACCEPTANCE.md](ACCEPTANCE.md). | builders + test + reviewer + docs |
 | **2 — Launch prep** | Aug 18 – Sep 7 | Store listing (title/keywords/screenshots/demo video), landing page, onboarding polish to >40% activation, funnel instrumentation, Pro/Teams tiers gated | 2 builders, 1 docs/devops, 1 reviewer |
 | **3 — Launch** | Sep 8 – Sep 21 | Web Store published; Product Hunt + r/Notion + creator outreach executed; first ~50 reviews harvested at 4.5★ | coordinator + 1–2 on fixes |
 | **4 — Growth to revenue** | Sep 22 – ~Q1 2027 | Iterate funnel (activation, find-replace ranking, Agency tier) to **$10k cumulative**, or documented pivot per OPERATIONS §5 | as needed |
