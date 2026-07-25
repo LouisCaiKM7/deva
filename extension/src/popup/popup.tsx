@@ -151,8 +151,15 @@ function Header({
 }) {
   return (
     <header class="app__header">
-      <div class="app__titlerow">
-        <h1 class="app__title">Bulk Buddy for Notion</h1>
+      <div class="brand">
+        <span class="brand__mark" aria-hidden="true">
+          ⇄
+        </span>
+        <h1 class="brand__name">
+          Bulk&nbsp;Buddy <span class="brand__for">for Notion</span>
+        </h1>
+      </div>
+      <div class="app__headright">
         {plan && (
           <span
             class={`plan ${plan.paid ? "plan--pro" : "plan--free"}`}
@@ -161,12 +168,16 @@ function Header({
             {plan.paid ? "Pro ✓" : "Free"}
           </span>
         )}
+        {plan && !plan.paid && (
+          <button
+            class="btn btn--primary btn--pill plan__upgrade"
+            type="button"
+            onClick={onUpgrade}
+          >
+            Upgrade
+          </button>
+        )}
       </div>
-      {plan && !plan.paid && (
-        <button class="linkbtn plan__upgrade" type="button" onClick={onUpgrade}>
-          Upgrade to Pro
-        </button>
-      )}
     </header>
   );
 }
