@@ -13,15 +13,14 @@
 // manual-token flow keeps working until the founder wires these up.
 
 /** Public Notion OAuth client id (from the Notion integration's OAuth settings). */
-export const NOTION_CLIENT_ID = "[NOTION_CLIENT_ID — founder fills]";
+export const NOTION_CLIENT_ID = "3a8d872b-594c-8175-90ad-0037ee839ede";
 
 /**
- * The deployed worker's callback URL, e.g.
- * `https://deva-notion-oauth.<subdomain>.workers.dev/callback`. This exact URL
- * must also be registered as a redirect URI on the Notion integration.
+ * The deployed worker's callback URL. This exact URL is also registered as the
+ * redirect URI on the Notion integration.
  */
 export const WORKER_CALLBACK_URL =
-  "[https://deva-notion-oauth.<subdomain>.workers.dev/callback — founder fills]";
+  "https://deva-notion-oauth.devanotion.workers.dev/callback";
 
 /**
  * True once both config values have been replaced with real ones. We detect the
