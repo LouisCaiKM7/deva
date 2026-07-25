@@ -2,69 +2,84 @@
 
 **Owner:** deva coordinator · **Last updated:** 2026-07-25 · **Governs:** all phases until superseded
 
+> Revised after the Phase-1a pivot ([ADR-0002](decisions/0002-pivot-to-browser-extension.md),
+> [ADR-0003](decisions/0003-product-notion-power-tools.md)). The original open-core dev-tool plan was superseded.
+
 ## 1. Objective
 
-Ship one open-core developer tool for the AI-application ecosystem and reach **$10,000 cumulative revenue** via a
-one-time paid Pro edition (Lemon Squeezy). Direction fixed in [ADR-0001](decisions/0001-product-direction.md).
+Ship a **freemium Notion workspace power-tools browser extension** (working name *Bulk Buddy for Notion*) and reach
+**$10,000 cumulative revenue**. Product fixed in [ADR-0003](decisions/0003-product-notion-power-tools.md).
 
-**Success metric:** $10,000 cumulative revenue. **Guardrail metric:** tokens spent (company cash) per phase.
+**Success metric:** $10,000 cumulative revenue. **Honest internal plan:** ~$6k base case; $10k is the stretch.
+**Guardrail metric:** tokens spent (company cash) per phase. **North-Star build metric:** activation rate
+(installs → connected a Notion token), the single biggest funnel leak.
 
 ## 2. Revenue model & the number
 
 | Lever | Plan |
 |---|---|
-| Price | $149–199 one-time Pro license (final price set in ADR-0002 / launch) |
-| Units to goal | ~50–70 paying developers |
-| Channel | Free OSS core → GitHub/npm/SEO/Product Hunt/dev-community funnel → Pro upgrade |
-| Processor | Lemon Squeezy (merchant-of-record; handles tax + chargebacks) |
-| COGS | ≈ $0 (no hosting for the paid artifact) |
+| Free hook | Cross-page/cross-database find-and-replace + small bulk batches — the install magnet & store-search ranking driver |
+| Pro | $6/mo · $48/yr · **$79 one-time (lifetime)** — bulk property ops, unlimited batches, recipes, bulk duplicate/apply-template |
+| Teams/Agency | $18/mo · $149/yr — multi-workspace recipes for consultants/template-sellers (highest-WTP segment) |
+| Units to goal | ~150–185 payers (base ~110 → ~$6k; stretch ~185 → ~$10k) |
+| Channel | Chrome Web Store search + r/Notion (~2M+) + template/creator ecosystem + Product Hunt |
+| Processor | ExtensionPay (Stripe broker, no server), swappable to Lemon Squeezy/Gumroad (merchant-of-record) if needed |
+| COGS | ≈ $0 (client-side extension calling Notion's official API; no hosting) |
 
-## 3. Timeline & milestones (target close ~2026-10-31)
+Detailed 6-month ramp and assumptions: [research/2026-07-extension-validation.md §4](research/2026-07-extension-validation.md).
+
+## 3. Timeline & milestones
 
 | Phase | Window | Deliverable / exit gate | Crew |
 |---|---|---|---|
-| **0 — Research & selection** | Jul 25 | ✅ Research synthesized, ADR-0001 accepted, PLAN merged, supervisor briefed | coordinator |
-| **1a — Product definition** | Jul 26 – Jul 29 | Exact product + wedge + competitor gap + v1 scope → **ADR-0002**; landing-page copy outline | 1 research + 1 architect |
-| **1b — MVP build** | Jul 30 – Aug 17 | OSS core v0.1 usable end-to-end; tests green in CI; `README`+quickstart; **Pro feature set specced** | ≤ 2 builders, 1 test, 1 reviewer, 1 docs |
-| **2 — Pro edition + launch prep** | Aug 18 – Sep 7 | Pro build gated behind a license; Lemon Squeezy store + landing page live; launch assets (PH, demo, docs) | 2 builders, 1 docs/devops, 1 reviewer |
-| **3 — Launch & iterate** | Sep 8 – Sep 30 | Public launch executed (Product Hunt + communities + SEO); feedback loop; conversion instrumentation | coordinator + 1–2 on fixes |
-| **4 — Revenue** | Oct 1 – Oct 31 | Iterate on funnel to **$10k cumulative**, or documented pivot per OPERATIONS §5 kill criteria | as needed |
+| **0 — Research & selection** | Jul 25 | ✅ Done | coordinator |
+| **1a — Product definition** | Jul 25 | ✅ Done — `replai` killed, pivot to Notion extension (ADR-0002/0003) | research + red-team |
+| **1b — MVP build** | Jul 26 – Aug 17 | **Day-1 CORS spike** → OSS-quality v1: token onboarding, find-and-replace, bulk property editor, saved recipes, ExtensionPay wired; tests + CI green | ≤2 builders, 1 test, 1 reviewer, 1 docs |
+| **2 — Launch prep** | Aug 18 – Sep 7 | Store listing (title/keywords/screenshots/demo video), landing page, onboarding polish to >40% activation, funnel instrumentation, Pro/Teams tiers gated | 2 builders, 1 docs/devops, 1 reviewer |
+| **3 — Launch** | Sep 8 – Sep 21 | Web Store published; Product Hunt + r/Notion + creator outreach executed; first ~50 reviews harvested at 4.5★ | coordinator + 1–2 on fixes |
+| **4 — Growth to revenue** | Sep 22 – ~Q1 2027 | Iterate funnel (activation, find-replace ranking, Agency tier) to **$10k cumulative**, or documented pivot per OPERATIONS §5 | as needed |
 
-Milestone dates are targets; each phase gate produces a supervisor report (what shipped, metrics, spend, blockers,
-next plan). Branches stay ≤ 3 days (OPERATIONS §2); larger phases are decomposed into short-lived PRs.
+Revenue is a ~4–6-month ramp *after* launch (organic store search ≈ 0 for months 1–3), so the $10k gate realistically
+lands **Q1 2027**; the $6k base case earlier. Each phase gate produces a supervisor report. Branches stay ≤ 3 days.
 
 ## 4. Crew plan (≤ 7 concurrent, OPERATIONS §5)
 
-Standard build-phase shape: 2–3 feature builders on **disjoint modules**, 1 test writer, 1 reviewer, 1 docs/devops;
-the coordinator integrates and does not do parallelizable work itself. Effort-tiered: scaffolding/boilerplate at low
-effort, design/debug/review at high effort. One agent = one self-contained deliverable, non-overlapping file ownership.
+Build-phase shape: 2–3 feature builders on **disjoint modules** (e.g. Notion API client / find-replace / bulk-property
+UI), 1 test writer, 1 reviewer, 1 docs/devops; coordinator integrates. **Coordinator launches every agent directly
+and forbids delegated sub-spawning** (OPERATIONS §5.6) so the ≤7 cap is always under explicit control. Effort-tiered:
+scaffolding at low effort; API/matching logic, debugging, review at high effort.
 
 ## 5. Token budget discipline (company cash)
 
-- Front-load research/planning (done); avoid re-work, which is the expensive failure.
-- Kill criteria: any workstream with no usable increment in 2 cycles is stopped and re-scoped.
-- The coordinator never redoes delegated work; agents get disjoint file ownership to avoid conflict churn.
+Front-load research/planning (done); avoid re-work. Two Phase-1a kills (`replai`, 3 dead extension niches) happened
+*before* any build — cheap paper losses that prevented expensive ones. Kill criteria: no usable increment in 2 cycles
+→ stop and re-scope. Coordinator never redoes delegated work; agents get disjoint file ownership.
 
 ## 6. Distribution plan (the binding constraint — first-class workstream)
 
-Because distribution decides the outcome, it is planned from day one, not bolted on at launch:
+Organic store search alone won't fund $10k; distribution is engineered from day one:
 
-1. **OSS core as the funnel** — genuinely useful free tool → GitHub stars, `npx`/CLI virality, organic search.
-2. **Content/SEO** — a docs site + problem-focused articles targeting the specific pain (built in Phase 2).
-3. **Launch spike** — Product Hunt + relevant dev communities (HN, Reddit, niche Slacks/Discords), timed once.
-4. **Conversion instrumentation** — measure OSS→Pro funnel; iterate in Phase 4.
+1. **Free find-and-replace hook** built to rank for the "notion find and replace" / "notion bulk edit" search intent.
+2. **Community distribution** — r/Notion, Notion template/creator partnerships, Notion-focused Discords/newsletters.
+3. **Product Hunt launch** — timed once, with demo video and the first reviews pre-seeded.
+4. **Agency wedge** — direct outreach to Notion consultants/template-sellers (the highest-WTP segment; the lever that
+   turns the $6k base into the $10k stretch).
+5. **Review flywheel** — harvest the first ~50 reviews at 4.5★ early; store conversion is review-sensitive.
 
 ## 7. Human-in-the-loop (supervisor) boundary
 
-The AI crew builds and launch-preps everything autonomously. The irreducible human-only steps (merchant-account KYC,
-publishing under a legal identity, anything needing a real-world identity) are batched in
-[FOUNDER-ACTIONS.md](FOUNDER-ACTIONS.md), surfaced only at phase gates, never one-at-a-time. They do not block the build.
+The AI crew builds and launch-preps everything autonomously. Irreducible human-only steps are batched in
+[FOUNDER-ACTIONS.md](FOUNDER-ACTIONS.md): a **$5 Chrome Web Store developer account**, a **Stripe account** (connected
+via ExtensionPay), publishing under a real identity, and OKing the public name/price. Surfaced only at phase gates,
+never one-at-a-time; they do not block the build.
 
 ## 8. Open risks
 
 | Risk | Mitigation |
 |---|---|
-| Crowded dev-tool market | Sharp, specific wedge required in ADR-0002; no generic starters |
-| Distribution underperforms | OSS growth loop + fallback channel (browser-extension pivot per ADR-0001 alternatives) |
-| Product-definition drift | Time-boxed Phase-1a with hard exit gate (ADR-0002) |
-| Revenue-collection blocked on human KYC | Documented early in FOUNDER-ACTIONS; product ships launch-ready regardless |
+| Token-paste onboarding throttles activation | 60-sec guided setup; "try on a demo DB before pasting"; activation = North-Star metric |
+| Notion ships native workspace bulk-ops | Target ops Notion under-invests in (formula/rollup, multi-DB recipes, agency flows); high cadence; brand/review moat |
+| Freemium economics (~1% pay) miss $10k | Business buyer w/ recurring pain; lifetime + Teams tiers; instrument funnel; Agency outreach |
+| CORS spike fails (zero-hosting thesis) | Day-1 spike before full build; fall back to Shopify runner-up (ADR-0003 alternatives) |
+| ExtensionPay outage / VAT burden | Payment layer behind a thin swappable interface → Lemon Squeezy/Gumroad (merchant-of-record) |
+| Clone risk (plain-JS extension) | Logic depth (recipes, batched API, rate-limits) + onboarding polish + review moat + update cadence |

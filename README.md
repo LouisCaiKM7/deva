@@ -6,13 +6,18 @@
 
 ## Status
 
-🟢 **Phase 0 complete → entering Phase 1a (product definition)** (updated 2026-07-25)
+🟢 **Phase 1a complete → entering Phase 1b (MVP build)** (updated 2026-07-25)
 
-**Direction chosen:** an **open-core developer tool for the AI-application ecosystem**, monetized as a **one-time
-paid Pro edition** via Lemon Squeezy (merchant-of-record). Target: **$10,000 cumulative revenue** from ~50–70
-buyers. Rationale in [ADR-0001](docs/decisions/0001-product-direction.md); full plan in [`docs/PLAN.md`](docs/PLAN.md).
+**Product chosen:** a **freemium Notion workspace power-tools browser extension** (working name *Bulk Buddy for
+Notion*) — cross-workspace find-and-replace + bulk property operations, built on Notion's **official API** (no
+hosting, no DOM scraping, no OAuth gate). Monetized freemium via ExtensionPay. Target: **$10,000 cumulative
+revenue in ~4–6 months** (honest base case ~$6k; $10k is the stretch).
 
-The *exact* product and its defensible wedge are locked next, in Phase 1a, as [ADR-0002](docs/decisions/).
+Decision trail: [ADR-0003](docs/decisions/0003-product-notion-power-tools.md) (product) ← [ADR-0002](docs/decisions/0002-pivot-to-browser-extension.md)
+(pivot; supersedes [ADR-0001](docs/decisions/0001-product-direction.md)). Full plan in [`docs/PLAN.md`](docs/PLAN.md).
+
+**Phase 1b begins with a one-day de-risk spike:** prove an MV3 service worker can call `api.notion.com` with a pasted
+integration token (CORS) before committing the full build.
 
 ## Repository layout
 

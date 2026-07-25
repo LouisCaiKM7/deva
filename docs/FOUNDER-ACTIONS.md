@@ -7,21 +7,22 @@ block the build.**
 
 Status legend: ⬜ not yet needed · 🟡 needed soon (phase noted) · 🔴 blocking revenue now · ✅ done
 
-## Revenue-collection (the one irreducible dependency)
+## Revenue-collection & publishing (the irreducible dependencies)
 
 | Status | Item | When | Why it needs a human |
 |---|---|---|---|
-| ⬜ | **Create a Lemon Squeezy seller account** (merchant-of-record) | before Phase 2 launch | KYC / payout bank details tied to a legal identity; handles global tax so we don't have to |
-| ⬜ | Provide the store's payout + tax details | with the above | legal/financial identity |
-| ⬜ | Approve the public product name & final price | Phase 1a–2 | branding/pricing is a founder call (crew will recommend) |
+| ⬜ | **Chrome Web Store developer account** (one-time **$5**) | before Phase 3 publish | registration + identity tied to a real Google account; required to publish any extension |
+| ⬜ | **Stripe account**, connected via ExtensionPay | before Phase 2 paywall | KYC / payout bank details tied to a legal identity; collects the money |
+| ⬜ | Approve the public product name & final price | Phase 2 | branding/pricing is a founder call (crew will recommend) |
+| ⬜ | *(Fallback only)* Lemon Squeezy/Gumroad account | if ExtensionPay outage/VAT bites | merchant-of-record handles global tax; only if we swap the payment layer |
 
 ## Distribution (optional but high-leverage — crew can draft, founder posts)
 
 | Status | Item | When | Notes |
 |---|---|---|---|
-| ⬜ | A GitHub org/account to host the OSS repo publicly | Phase 1b | can be the existing `LouisCaiKM7`; crew ships the code, founder just OKs going public |
-| ⬜ | (Optional) Post the launch on Product Hunt / X under a real profile | Phase 3 | crew prepares all copy/assets; a real human profile converts better than a bot |
-| ⬜ | (Optional) A domain for the landing page/docs | Phase 2 | crew can deploy to a free `*.pages.dev`/`*.vercel.app` if no domain is provided |
+| ⬜ | (Optional) Post the launch on Product Hunt / r/Notion / X under a real profile | Phase 3 | crew prepares all copy/assets; a real human profile converts better than a bot |
+| ⬜ | (Optional) A domain for the landing page | Phase 2 | crew can deploy to a free `*.pages.dev`/`*.vercel.app` if no domain is provided |
+| ⬜ | (Optional) OK making the source repo public | Phase 1b | can be the existing `LouisCaiKM7`; not required — the extension ships via the Web Store either way |
 
 ## Deliberately NOT required of the founder
 
