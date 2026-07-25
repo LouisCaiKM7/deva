@@ -6,7 +6,10 @@
 // shell lives in ./paywall.ts and only supplies the `isPro` boolean these
 // helpers consume.
 
-import { FREE_FIND_REPLACE_APPLY_LIMIT } from "../shared/paywall-config.js";
+import {
+  FREE_FIND_REPLACE_APPLY_LIMIT,
+  FREE_RECIPE_LIMIT,
+} from "../shared/paywall-config.js";
 
 /** Outcome of checking whether a Find & Replace apply is permitted. */
 export interface FindReplaceGate {
@@ -39,4 +42,15 @@ export function canApplyFindReplace(
 /** Whether the Bulk Edit view is usable (Pro-only feature). */
 export function canUseBulkEdit(isPro: boolean): boolean {
   return isPro;
+}
+
+/**
+ * Decide whether the user may save ANOTHER recipe.
+ *
+ * Free tier keeps at most {@link FREE_RECIPE_LIMIT} recipes; a free user with
+ * that many (or more) is blocked with an upsell. Pro is unlimited.
+ */
+export function canSaveRecipe(currentCount: number, isPro: boolean): boolean {
+  if (isPro) return true;
+  return currentCount < FREE_RECIPE_LIMIT;
 }

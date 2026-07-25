@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { canApplyFindReplace, canUseBulkEdit } from "./gating.js";
-import { FREE_FIND_REPLACE_APPLY_LIMIT } from "../shared/paywall-config.js";
+import { canApplyFindReplace, canSaveRecipe, canUseBulkEdit } from "./gating.js";
+import {
+  FREE_FIND_REPLACE_APPLY_LIMIT,
+  FREE_RECIPE_LIMIT,
+} from "../shared/paywall-config.js";
 
 describe("canApplyFindReplace", () => {
   it("allows a free user to apply fewer than the cap", () => {
@@ -42,5 +45,23 @@ describe("canUseBulkEdit", () => {
 
   it("allows Pro users", () => {
     expect(canUseBulkEdit(true)).toBe(true);
+  });
+});
+
+describe("canSaveRecipe", () => {
+  it("allows a free user below the recipe limit", () => {
+    expect(canSaveRecipe(FREE_RECIPE_LIMIT - 1, false)).toBe(true);
+  });
+
+  it("blocks a free user exactly at the limit (boundary)", () => {
+    expect(canSaveRecipe(FREE_RECIPE_LIMIT, false)).toBe(false);
+  });
+
+  it("blocks a free user over the limit", () => {
+    expect(canSaveRecipe(FREE_RECIPE_LIMIT + 5, false)).toBe(false);
+  });
+
+  it("allows a Pro user regardless of count", () => {
+    expect(canSaveRecipe(FREE_RECIPE_LIMIT + 100, true)).toBe(true);
   });
 });

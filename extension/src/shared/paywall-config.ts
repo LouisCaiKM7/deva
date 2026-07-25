@@ -17,3 +17,6 @@ export const EXTENSIONPAY_ID = "bulk-buddy-for-notion";
 // Free users may Apply a Find & Replace run to at most this many matches. The
 // preview always shows ALL matches; only the Apply is capped. Pro is unlimited.
 export const FREE_FIND_REPLACE_APPLY_LIMIT = 25;
+
+// Free users may keep at most this many saved recipes; Pro is unlimited.
+export const FREE_RECIPE_LIMIT = 1;
