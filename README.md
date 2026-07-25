@@ -6,16 +6,21 @@
 
 ## Status
 
-🟡 **Phase 0 — Market research & product selection** (started 2026-07-25)
+🟢 **Phase 0 complete → entering Phase 1a (product definition)** (updated 2026-07-25)
 
-The product has not been selected yet. Market research is in progress; the product decision will be recorded as an Architecture Decision Record in [`docs/decisions/`](docs/decisions/) and the full business plan in [`docs/PLAN.md`](docs/PLAN.md).
+**Direction chosen:** an **open-core developer tool for the AI-application ecosystem**, monetized as a **one-time
+paid Pro edition** via Lemon Squeezy (merchant-of-record). Target: **$10,000 cumulative revenue** from ~50–70
+buyers. Rationale in [ADR-0001](docs/decisions/0001-product-direction.md); full plan in [`docs/PLAN.md`](docs/PLAN.md).
+
+The *exact* product and its defensible wedge are locked next, in Phase 1a, as [ADR-0002](docs/decisions/).
 
 ## Repository layout
 
 | Path | Purpose |
 |---|---|
 | `docs/OPERATIONS.md` | Company operating rules: branching, commits, PRs, agent workforce management, token budgeting |
-| `docs/PLAN.md` | Business plan: target, timeline, milestones (written after product selection) |
+| `docs/PLAN.md` | Business plan: target, timeline, milestones, distribution plan |
+| `docs/FOUNDER-ACTIONS.md` | The batched human-only checklist (accounts/KYC) — never pestered one-at-a-time |
 | `docs/research/` | Market & technical research reports |
 | `docs/decisions/` | Architecture / business Decision Records (ADRs) |
 | `src/` | Product source code (created in Phase 1) |
