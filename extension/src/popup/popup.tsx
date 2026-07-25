@@ -20,6 +20,9 @@ import type {
   FindPreview,
   UndoEntry,
 } from "../features/find-replace/engine.js";
+import { Message } from "./ui.js";
+import type { Banner } from "./ui.js";
+import { BulkEditView } from "./BulkEditView.js";
 
 // ── shared helpers ────────────────────────────────────────────────────────────
 
@@ -30,17 +33,6 @@ function describeUser(user: NotionUser): string {
   if (workspace) return workspace;
   if (name) return name;
   return `Bot ${user.id.slice(0, 8)}`;
-}
-
-type Banner = { kind: "info" | "ok" | "err"; text: string } | null;
-
-function Message({ banner }: { banner: Banner }) {
-  if (!banner) return null;
-  return (
-    <div class={`msg msg--${banner.kind}`} role="status" aria-live="polite">
-      {banner.text}
-    </div>
-  );
 }
 
 // ── App root ──────────────────────────────────────────────────────────────────
@@ -261,23 +253,14 @@ function Workbench() {
           role="tab"
           aria-selected={tab === "bulk"}
           type="button"
-          disabled
-          title="Coming soon"
+          onClick={() => setTab("bulk")}
         >
           Bulk Edit
         </button>
       </div>
 
-      {tab === "find" ? <FindReplaceView /> : <BulkComingSoon />}
+      {tab === "find" ? <FindReplaceView /> : <BulkEditView />}
     </section>
-  );
-}
-
-function BulkComingSoon() {
-  return (
-    <div class="msg msg--info">
-      Bulk property editing lands in the next update.
-    </div>
   );
 }
 
