@@ -12,7 +12,7 @@ Status legend: ⬜ not yet needed · 🟡 needed soon (phase noted) · 🔴 bloc
 | Status | Item | When | Why it needs a human |
 |---|---|---|---|
 | ⬜ | **Chrome Web Store developer account** (one-time **$5**) | before Phase 3 publish | registration + identity tied to a real Google account; required to publish any extension |
-| ⬜ | **Stripe account**, connected via ExtensionPay | before Phase 2 paywall | KYC / payout bank details tied to a legal identity; collects the money |
+| ⬜ | **Register on [ExtensionPay](https://extensionpay.com)** with the exact id **`bulk-buddy-for-notion`** (must match `EXTENSIONPAY_ID` in `extension/src/shared/paywall-config.ts`), connect **Stripe**, and create at least one paid plan | before Phase 2 paywall | KYC / payout tied to a legal identity; until this is done `getUser()` returns `paid:false` for everyone (free tier still fully works) |
 | ⬜ | Approve the public product name & final price | Phase 2 | branding/pricing is a founder call (crew will recommend) |
 | ⬜ | *(Fallback only)* Lemon Squeezy/Gumroad account | if ExtensionPay outage/VAT bites | merchant-of-record handles global tax; only if we swap the payment layer |
 

@@ -45,10 +45,106 @@ body {
   gap: 2px;
 }
 
+.app__titlerow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .app__title {
   margin: 0;
   font-size: 15px;
   font-weight: 600;
+}
+
+/* Plan status badge + header upgrade link */
+.plan {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 10px;
+  line-height: 1.6;
+}
+
+.plan--free {
+  color: var(--muted);
+  background: var(--secondary-bg);
+  border: 1px solid var(--border);
+}
+
+.plan--pro {
+  color: var(--ok-fg);
+  background: var(--ok-bg);
+  border: 1px solid var(--ok-border);
+}
+
+.plan__upgrade {
+  align-self: flex-start;
+  padding: 0;
+  font-weight: 600;
+}
+
+/* Paywall card (shown in place of a gated Pro feature) */
+.paywall {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  padding: 20px 16px;
+  background: var(--panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+
+.paywall__badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--primary);
+  background: rgba(37, 99, 235, 0.1);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.paywall__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.paywall__body {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.paywall .btn {
+  flex: none;
+  min-width: 160px;
+}
+
+.tab__lock {
+  font-size: 11px;
+}
+
+/* Inline upsell (Find & Replace apply cap exceeded) */
+.upsell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.upsell__text {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--fg);
 }
 
 .stack {

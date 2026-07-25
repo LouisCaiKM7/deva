@@ -23,6 +23,9 @@ import type {
 import { Message } from "./ui.js";
 import type { Banner } from "./ui.js";
 import { BulkEditView } from "./BulkEditView.js";
+import { getPlan, openUpgrade } from "./paywall.js";
+import type { Plan } from "./paywall.js";
+import { canApplyFindReplace, canUseBulkEdit } from "./gating.js";
 
 // ── shared helpers ────────────────────────────────────────────────────────────
 
@@ -45,6 +48,21 @@ type Conn =
 
 function App() {
   const [conn, setConn] = useState<Conn>({ status: "loading" });
+  // Paywall plan status. `null` until the first ExtPay lookup resolves; a lookup
+  // failure (e.g. network) is treated as free so the app stays usable offline.
+  const [plan, setPlan] = useState<Plan | null>(null);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        setPlan(await getPlan());
+      } catch {
+        setPlan({ paid: false });
+      }
+    })();
+  }, []);
+
+  const isPro = plan?.paid ?? false;
 
   async function refresh() {
     const saved = await getToken();
@@ -67,10 +85,12 @@ function App() {
     setConn({ status: "disconnected" });
   }
 
+  const header = <Header plan={plan} onUpgrade={() => void openUpgrade()} />;
+
   if (conn.status === "loading") {
     return (
       <main class="app">
-        <Header />
+        {header}
         <div class="msg msg--info">Loading…</div>
       </main>
     );
@@ -79,7 +99,7 @@ function App() {
   if (conn.status === "disconnected") {
     return (
       <main class="app">
-        <Header />
+        {header}
         <Onboarding onConnected={() => void refresh()} />
       </main>
     );
@@ -88,7 +108,7 @@ function App() {
   if (conn.status === "error") {
     return (
       <main class="app">
-        <Header />
+        {header}
         <div class="msg msg--err">Connection problem: {conn.error}</div>
         <button class="btn btn--secondary" type="button" onClick={() => void disconnect()}>
           Disconnect
@@ -99,17 +119,38 @@ function App() {
 
   return (
     <main class="app">
-      <Header />
+      {header}
       <ConnectedBar label={describeUser(conn.user)} onDisconnect={() => void disconnect()} />
-      <Workbench />
+      <Workbench isPro={isPro} onUpgrade={() => void openUpgrade()} />
     </main>
   );
 }
 
-function Header() {
+function Header({
+  plan,
+  onUpgrade,
+}: {
+  plan: Plan | null;
+  onUpgrade: () => void;
+}) {
   return (
     <header class="app__header">
-      <h1 class="app__title">Bulk Buddy for Notion</h1>
+      <div class="app__titlerow">
+        <h1 class="app__title">Bulk Buddy for Notion</h1>
+        {plan && (
+          <span
+            class={`plan ${plan.paid ? "plan--pro" : "plan--free"}`}
+            title={plan.paid ? "Pro plan — all features unlocked" : "Free plan"}
+          >
+            {plan.paid ? "Pro ✓" : "Free"}
+          </span>
+        )}
+      </div>
+      {plan && !plan.paid && (
+        <button class="linkbtn plan__upgrade" type="button" onClick={onUpgrade}>
+          Upgrade to Pro
+        </button>
+      )}
     </header>
   );
 }
@@ -234,8 +275,15 @@ function Onboarding({ onConnected }: { onConnected: () => void }) {
 
 type Tab = "find" | "bulk";
 
-function Workbench() {
+function Workbench({
+  isPro,
+  onUpgrade,
+}: {
+  isPro: boolean;
+  onUpgrade: () => void;
+}) {
   const [tab, setTab] = useState<Tab>("find");
+  const bulkAllowed = canUseBulkEdit(isPro);
   return (
     <section class="stack">
       <div class="tabs" role="tablist">
@@ -255,12 +303,44 @@ function Workbench() {
           type="button"
           onClick={() => setTab("bulk")}
         >
-          Bulk Edit
+          Bulk Edit {!bulkAllowed && <span class="tab__lock" aria-hidden="true">🔒</span>}
         </button>
       </div>
 
-      {tab === "find" ? <FindReplaceView /> : <BulkEditView />}
+      {tab === "find" ? (
+        <FindReplaceView isPro={isPro} onUpgrade={onUpgrade} />
+      ) : bulkAllowed ? (
+        <BulkEditView />
+      ) : (
+        <PaywallCard
+          onUpgrade={onUpgrade}
+          title="Bulk Edit is a Pro feature"
+          body="Edit a whole database's properties at once — set, clear, find & replace, and manage multi-select options across every page in one run."
+        />
+      )}
     </section>
+  );
+}
+
+/** Clean upsell card shown in place of a gated Pro feature. */
+function PaywallCard({
+  title,
+  body,
+  onUpgrade,
+}: {
+  title: string;
+  body: string;
+  onUpgrade: () => void;
+}) {
+  return (
+    <div class="paywall">
+      <div class="paywall__badge">Pro</div>
+      <h2 class="paywall__title">{title}</h2>
+      <p class="paywall__body">{body}</p>
+      <button class="btn btn--primary" type="button" onClick={onUpgrade}>
+        Upgrade to Pro
+      </button>
+    </div>
   );
 }
 
@@ -274,7 +354,13 @@ interface ApplyResult {
   undo: UndoEntry[];
 }
 
-function FindReplaceView() {
+function FindReplaceView({
+  isPro,
+  onUpgrade,
+}: {
+  isPro: boolean;
+  onUpgrade: () => void;
+}) {
   const [search, setSearch] = useState("");
   const [replace, setReplace] = useState("");
   const [scope, setScope] = useState<ScopeKind>("all");
@@ -357,6 +443,15 @@ function FindReplaceView() {
     const selected: FindMatch[] = preview.matches.filter((_, i) => checked[i]);
     if (selected.length === 0) {
       setBanner({ kind: "err", text: "Select at least one match to apply." });
+      return;
+    }
+    // Freemium cap: free users may apply at most `limit` matches per run.
+    const gate = canApplyFindReplace(selected.length, isPro);
+    if (!gate.allowed) {
+      setBanner({
+        kind: "err",
+        text: `Upgrade to Pro to apply all ${selected.length} matches — the free plan applies up to ${gate.limit} per run. Deselect some, or upgrade for unlimited.`,
+      });
       return;
     }
     const confirmed = confirm(
@@ -509,6 +604,18 @@ function FindReplaceView() {
           {applying ? "Applying…" : `Apply${preview ? ` (${checkedCount})` : ""}`}
         </button>
       </div>
+
+      {preview && !canApplyFindReplace(checkedCount, isPro).allowed && (
+        <div class="upsell">
+          <span class="upsell__text">
+            Free plan applies up to {canApplyFindReplace(checkedCount, isPro).limit}{" "}
+            matches per run. Upgrade to Pro to apply all {checkedCount}.
+          </span>
+          <button class="btn btn--primary" type="button" onClick={onUpgrade}>
+            Upgrade to Pro
+          </button>
+        </div>
+      )}
 
       <Message banner={banner} />
 

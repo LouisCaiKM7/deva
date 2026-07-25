@@ -10,6 +10,9 @@
     "service_worker": "dist/service-worker.js",
     "type": "module"
   },
-  "host_permissions": ["https://api.notion.com/*"],
+  "host_permissions": [
+    "https://api.notion.com/*",
+    "https://extensionpay.com/*"
+  ],
   "permissions": ["storage"]
 }
