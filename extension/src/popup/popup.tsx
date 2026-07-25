@@ -131,6 +131,10 @@ function App() {
     <main class="app">
       {header}
       <ConnectedBar label={describeUser(conn.user)} onDisconnect={() => void disconnect()} />
+      <p class="hint">
+        Find &amp; replace text across your Notion page properties, or bulk-edit a
+        whole database at once.
+      </p>
       <Workbench isPro={isPro} onUpgrade={() => void openUpgrade()} />
     </main>
   );
@@ -233,11 +237,34 @@ function Onboarding({ onConnected }: { onConnected: () => void }) {
   return (
     <section class="stack">
       <p class="hint">
-        Create an internal integration at{" "}
-        <span class="hint__url">notion.so/my-integrations</span>, copy its secret,
-        then <strong>share the pages/databases</strong> you want to edit with that
-        integration.
+        Connect your Notion workspace in three steps.
       </p>
+
+      <ol class="steps">
+        <li>
+          Create an internal integration at{" "}
+          <a
+            class="link"
+            href="https://www.notion.so/my-integrations"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            notion.so/my-integrations
+          </a>{" "}
+          (New integration → Internal).
+        </li>
+        <li>
+          Copy the <strong>Internal Integration Token</strong> and paste it below.
+        </li>
+        <li class="steps__important">
+          <strong>Share your pages with it.</strong> In Notion, open a
+          page or database → <strong>•••</strong> → <strong>Connections</strong> →
+          add your integration. Repeat for anything you want to edit.
+          <span class="steps__warn">
+            Skip this and every search comes back empty.
+          </span>
+        </li>
+      </ol>
 
       <label class="field" for="token">
         <span class="field__label">Notion integration token</span>
@@ -530,11 +557,9 @@ function FindReplaceView({
     }
     setPreview(res.data);
     setChecked(res.data.matches.map(() => true));
-    if (res.data.matches.length === 0) {
-      setBanner({ kind: "info", text: "No matches found." });
-    } else {
-      setBanner(null);
-    }
+    // A zero-match preview is rendered as a dedicated empty-state below (which
+    // also reminds users to share their pages), so clear the banner here.
+    setBanner(null);
   }
 
   async function runApply() {
@@ -728,6 +753,18 @@ function FindReplaceView({
       )}
 
       <Message banner={banner} />
+
+      {preview && preview.matches.length === 0 && (
+        <div class="emptyhint">
+          <p class="emptyhint__title">No pages found.</p>
+          <p class="emptyhint__body">
+            Expecting results? Make sure you&rsquo;ve{" "}
+            <strong>shared your pages with your integration</strong> in Notion:
+            open a page or database → <strong>•••</strong> →{" "}
+            <strong>Connections</strong> → add your integration.
+          </p>
+        </div>
+      )}
 
       {preview && preview.matches.length > 0 && (
         <div class="results">

@@ -241,6 +241,84 @@ body {
   font-weight: 500;
 }
 
+.link {
+  color: var(--primary);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+  border-radius: 3px;
+}
+
+/* Onboarding: numbered setup steps */
+.steps {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--fg);
+}
+
+.steps li {
+  padding-left: 2px;
+}
+
+/* Step 3 — the most-missed step, given visual weight. */
+.steps__important {
+  list-style: none;
+  margin-left: -20px;
+  padding: 8px 10px;
+  background: #fff8ec;
+  border: 1px solid #f5c77e;
+  border-radius: 6px;
+}
+
+.steps__important::before {
+  content: "⚠";
+  margin-right: 6px;
+  color: #b45309;
+  font-weight: 700;
+}
+
+.steps__warn {
+  display: block;
+  margin-top: 4px;
+  color: #b45309;
+  font-weight: 600;
+}
+
+/* Find & Replace empty state — reminds users to share pages */
+.emptyhint {
+  padding: 10px 12px;
+  background: var(--panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+}
+
+.emptyhint__title {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.emptyhint__body {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
 /* Buttons */
 .actions {
   display: flex;
