@@ -16,12 +16,16 @@ const watch = process.argv.includes("--watch");
 const buildOptions = {
   entryPoints: {
     "service-worker": "src/background/service-worker.ts",
-    "popup": "src/popup/popup.ts",
+    "popup": "src/popup/popup.tsx",
   },
   outdir: "dist",
   bundle: true,
   format: "esm",
   target: "es2020",
+  // Preact automatic JSX runtime — no per-file `h` import, no CDN. esbuild
+  // resolves `preact/jsx-runtime` from the bundled dependency.
+  jsx: "automatic",
+  jsxImportSource: "preact",
   minify: false,
   sourcemap: true,
   logLevel: "info",
