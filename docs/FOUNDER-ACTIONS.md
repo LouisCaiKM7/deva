@@ -16,6 +16,21 @@ Status legend: ⬜ not yet needed · 🟡 needed soon (phase noted) · 🔴 bloc
 | ⬜ | Approve the public product name & final price | Phase 2 | branding/pricing is a founder call (crew will recommend) |
 | ⬜ | *(Fallback only)* Lemon Squeezy/Gumroad account | if ExtensionPay outage/VAT bites | merchant-of-record handles global tax; only if we swap the payment layer |
 
+## One-click "Connect with Notion" OAuth (one-time setup — see [ADR-0004](decisions/0004-notion-oauth.md))
+
+Removes the token-copying + manual page-sharing friction. All code is written by the crew; these steps deploy it.
+No secret is ever shared with the crew — the client secret lives only as a Cloudflare secret. Do them **in order**:
+
+| # | Item | Where | Notes |
+|---|---|---|---|
+| ⬜ 1 | **Deploy the Worker** — `cd oauth-worker && wrangler deploy` | your Cloudflare (wrangler already logged in) | prints the `https://deva-notion-oauth.<you>.workers.dev` URL — its `/callback` is your redirect URI |
+| ⬜ 2 | **Create a Notion public OAuth integration** | notion.so/my-integrations → New → **Public** | set the **Redirect URI** to `…workers.dev/callback` from step 1; copy the **OAuth client ID** + **client secret** |
+| ⬜ 3 | **Set the two secrets on the Worker** | `wrangler secret put NOTION_CLIENT_ID` then `… NOTION_CLIENT_SECRET` | pasted into Cloudflare, **never into the repo or to the crew** |
+| ⬜ 4 | **Fill the two non-secret config values** | `extension/src/shared/oauth-config.ts` | `NOTION_CLIENT_ID` (safe — it's public) + the Worker `/callback` URL; then `npm run build` and reload |
+
+Until steps 1–4 are done, the "Connect with Notion" button stays hidden and the manual-token flow works unchanged, so
+nothing is blocked. Full deploy details in `oauth-worker/README.md`.
+
 ## Distribution (optional but high-leverage — crew can draft, founder posts)
 
 | Status | Item | When | Notes |

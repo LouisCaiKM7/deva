@@ -27,3 +27,6 @@ Thumbs.db
 
 # Claude Code local/personal settings (shared config, if any, lives in .claude/settings.json)
 .claude/settings.local.json
+
+# Cloudflare Wrangler local state
+.wrangler/
