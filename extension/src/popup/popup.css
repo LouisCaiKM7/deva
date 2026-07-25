@@ -386,6 +386,43 @@ body {
   border-color: var(--border);
 }
 
+.btn--block {
+  width: 100%;
+  flex: none;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* One-click OAuth block + manual-token collapsible */
+.oauth {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.oauth__note {
+  color: var(--muted);
+}
+
+.advanced {
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: var(--panel);
+}
+
+.advanced__summary {
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--fg);
+  list-style: revert;
+}
+
+.advanced__body {
+  margin-top: 10px;
+}
+
 /* Tabs */
 .tabs {
   display: flex;

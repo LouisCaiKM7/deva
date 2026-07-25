@@ -30,6 +30,8 @@ import { canApplyFindReplace, canUseBulkEdit } from "./gating.js";
 import { RecipesPanel, SaveRecipeControl } from "./recipe-ui.js";
 import { deleteRecipe, listRecipes } from "../shared/recipes.js";
 import type { Recipe } from "../shared/recipes.js";
+import { connectWithNotion } from "./oauth.js";
+import { isOAuthConfigured } from "../shared/oauth-config.js";
 
 /** A queued request to replay a saved config into a view (nonce forces re-apply). */
 export interface FindReplaceLoad {
@@ -207,10 +209,43 @@ function Onboarding({ onConnected }: { onConnected: () => void }) {
   const [testing, setTesting] = useState(false);
   const [tested, setTested] = useState(false);
   const [dbCheck, setDbCheck] = useState<DbCheck>({ status: "idle" });
+  const [connecting, setConnecting] = useState(false);
   const [banner, setBanner] = useState<Banner>({
     kind: "info",
     text: "Paste your Notion internal integration token to begin.",
   });
+  const oauthReady = isOAuthConfigured();
+
+  /**
+   * One-click OAuth: open Notion's own consent UI (where the user picks pages to
+   * share), obtain an access token, and — exactly like a saved manual token —
+   * advance to the workbench.
+   */
+  async function connect() {
+    setConnecting(true);
+    setBanner({ kind: "info", text: "Opening Notion…" });
+    try {
+      const res = await connectWithNotion();
+      if (res.ok) {
+        setBanner({
+          kind: "ok",
+          text: res.data.workspaceName
+            ? `Connected to ${res.data.workspaceName}.`
+            : "Connected.",
+        });
+        onConnected();
+      } else {
+        setBanner({ kind: "err", text: res.error });
+      }
+    } catch (err) {
+      setBanner({
+        kind: "err",
+        text: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setConnecting(false);
+    }
+  }
 
   /**
    * Ask the worker how many databases the integration can actually see. This is
@@ -272,6 +307,36 @@ function Onboarding({ onConnected }: { onConnected: () => void }) {
 
   return (
     <section class="stack">
+      {oauthReady ? (
+        <div class="oauth">
+          <p class="hint">
+            Connect your Notion workspace in one click — you&rsquo;ll pick which
+            pages to share in Notion&rsquo;s own window.
+          </p>
+          <button
+            class="btn btn--primary btn--block"
+            type="button"
+            disabled={connecting}
+            onClick={() => void connect()}
+          >
+            {connecting ? "Connecting…" : "Connect with Notion"}
+          </button>
+          <Message banner={banner} />
+        </div>
+      ) : (
+        <p class="hint">
+          Connect your Notion workspace by pasting an integration token below.
+          <span class="oauth__note"> (One-click OAuth isn&rsquo;t configured yet.)</span>
+        </p>
+      )}
+
+      <details class="advanced" open={!oauthReady}>
+        <summary class="advanced__summary">
+          {oauthReady
+            ? "Paste a token manually instead (advanced)"
+            : "Connect with an integration token"}
+        </summary>
+        <div class="stack advanced__body">
       <p class="hint">
         Connect your Notion workspace in three steps.
       </p>
@@ -346,6 +411,8 @@ function Onboarding({ onConnected }: { onConnected: () => void }) {
 
       <Message banner={banner} />
       <DbCheckPanel state={dbCheck} onRecheck={() => void runDbCheck()} />
+        </div>
+      </details>
     </section>
   );
 }

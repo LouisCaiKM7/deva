@@ -1,0 +1,8 @@
+name = "deva-notion-oauth"
+main = "src/worker.js"
+compatibility_date = "2025-06-01"
+workers_dev = true
+
+# Secrets are NOT stored here. Set them out-of-band (they never touch git):
+#   wrangler secret put NOTION_CLIENT_ID
+#   wrangler secret put NOTION_CLIENT_SECRET

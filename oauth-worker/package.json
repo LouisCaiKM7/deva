@@ -1,0 +1,11 @@
+{
+  "name": "deva-notion-oauth-worker",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Worker that holds the Notion OAuth client secret and exchanges auth codes for access tokens on behalf of the Bulk Buddy extension.",
+  "scripts": {
+    "test": "node --test \"src/*.test.js\"",
+    "deploy": "wrangler deploy"
+  }
+}
