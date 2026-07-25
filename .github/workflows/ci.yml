@@ -28,7 +28,8 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Test
+        run: npm test
+
       - name: Build
         run: npm run build
-
-      # Tests run here once a test runner is added in the feature build.
