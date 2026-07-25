@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Bulk Buddy for Notion (dev)",
+  "version": "0.0.1",
+  "description": "Connect a Notion integration and run bulk actions. Dev connection spike.",
+  "action": {
+    "default_popup": "dist/popup.html"
+  },
+  "background": {
+    "service_worker": "dist/service-worker.js",
+    "type": "module"
+  },
+  "host_permissions": ["https://api.notion.com/*"],
+  "permissions": ["storage"]
+}

@@ -1,0 +1,136 @@
+:root {
+  --bg: #ffffff;
+  --fg: #1f2328;
+  --muted: #6b7280;
+  --border: #d0d5dd;
+  --primary: #2563eb;
+  --primary-fg: #ffffff;
+  --secondary-bg: #f3f4f6;
+  --ok-bg: #ecfdf3;
+  --ok-fg: #027a48;
+  --ok-border: #a6f4c5;
+  --err-bg: #fef3f2;
+  --err-fg: #b42318;
+  --err-border: #fecdca;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+.app {
+  width: 340px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.app__header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.app__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.app__subtitle {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field__label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.field__input {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  outline: none;
+}
+
+.field__input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn--primary {
+  background: var(--primary);
+  color: var(--primary-fg);
+}
+
+.btn--secondary {
+  background: var(--secondary-bg);
+  color: var(--fg);
+  border-color: var(--border);
+}
+
+.status {
+  min-height: 18px;
+  font-size: 12px;
+  border-radius: 6px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.status--info {
+  color: var(--muted);
+}
+
+.status--ok {
+  padding: 8px 10px;
+  background: var(--ok-bg);
+  color: var(--ok-fg);
+  border: 1px solid var(--ok-border);
+}
+
+.status--err {
+  padding: 8px 10px;
+  background: var(--err-bg);
+  color: var(--err-fg);
+  border: 1px solid var(--err-border);
+}

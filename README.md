@@ -28,7 +28,7 @@ integration token (CORS) before committing the full build.
 | `docs/FOUNDER-ACTIONS.md` | The batched human-only checklist (accounts/KYC) — never pestered one-at-a-time |
 | `docs/research/` | Market & technical research reports |
 | `docs/decisions/` | Architecture / business Decision Records (ADRs) |
-| `src/` | Product source code (created in Phase 1) |
+| `extension/` | Product source — the Manifest V3 browser extension (Notion power-tools) |
 
 ## Governance
 
